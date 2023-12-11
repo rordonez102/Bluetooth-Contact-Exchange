@@ -52,8 +52,6 @@ class AndroidBluetoothController(
     }
     private var dataTransfer: BluetoothDataTransfer? = null
 
-    private val phoneNumberHelper = PhoneNumberHelper(context)
-
     private val _isConnected = MutableStateFlow<Boolean>(false)
     override val isConnected: StateFlow<Boolean>
         get() = _isConnected.asStateFlow()
@@ -264,9 +262,6 @@ class AndroidBluetoothController(
     private fun hasPermission(permission: String): Boolean {
         return context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
     }
-    private fun getPhoneNumberFlow(): String {
-        return phoneNumberHelper.getPhoneNumber()
-    }
 
     private suspend fun readImageBytes(uri: Uri): ByteArray {
         return withContext(Dispatchers.IO) {
@@ -281,7 +276,6 @@ class AndroidBluetoothController(
             }
         }
     }
-
     private suspend fun uploadImageToFirebaseStorage(imageBytes: ByteArray): String {
         val storageReference = FirebaseStorage.getInstance().reference
         val imagesRef = storageReference.child("images")

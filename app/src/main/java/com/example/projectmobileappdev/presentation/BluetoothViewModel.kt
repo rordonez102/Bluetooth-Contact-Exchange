@@ -132,6 +132,8 @@ class BluetoothViewModel @Inject constructor(
                         errorMessage = result.errorMessage
                     ) }
                 }
+
+                else -> {}
             }
         }
             .catch { throwable ->
