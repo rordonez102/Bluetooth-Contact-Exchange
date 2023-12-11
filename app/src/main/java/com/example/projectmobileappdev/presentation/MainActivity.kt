@@ -1,6 +1,8 @@
 package com.example.projectmobileappdev.presentation
 
 import android.Manifest
+import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Intent
@@ -21,6 +23,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
@@ -28,11 +33,14 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.projectmobileappdev.presentation.components.ChatScreen
 import com.example.projectmobileappdev.presentation.components.DeviceScreen
+import com.example.projectmobileappdev.presentation.components.ModalOverlay
 import com.example.projectmobileappdev.ui.theme.ProjectMobileappdevTheme
+import com.google.firebase.FirebaseApp
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    private var isOverlayVisible by mutableStateOf(false)
     //Calls the bluetooth manager and bluetooth adapter instances when needed.
     private val bluetoothManager by lazy {
         applicationContext.getSystemService(BluetoothManager::class.java)
@@ -68,8 +76,11 @@ class MainActivity : ComponentActivity() {
     }
 
     //requests permission for bluetooth and if permission is granted, loads the app.
+    @SuppressLint("UnrememberedMutableState")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        FirebaseApp.initializeApp(this)
+
         val enableBluetoothLauncher = registerForActivityResult(
             ActivityResultContracts.StartActivityForResult()
         ) {}
@@ -101,6 +112,28 @@ class MainActivity : ComponentActivity() {
         enableBluetoothLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
         makeDeviceDiscoverable()
 
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("How it works")
+            .setMessage("*DISCLAIMER* - Needs a second device to work.\n" +
+                    "\n1. Scan for nearby devices on both devices.\n" +
+                    "2. Pair devices through the Bluetooth settings.\n" +
+                    "3. Initiate connection with one of the devices.\n" +
+                    "4. Select the device that has initiated the connection.\n" +
+                    "5. You can start sending messages!")
+            .setPositiveButton("OK") { _, _ ->
+                // Closes the modal.
+            }
+            .create()
+
+        // Show the dialog
+        dialog.show()
+
+        isOverlayVisible = true
+
+        dialog.setOnDismissListener {
+            isOverlayVisible = false
+        }
+
         setContent {
             ProjectMobileappdevTheme {
                 val viewModel = hiltViewModel<BluetoothViewModel>()
@@ -128,6 +161,7 @@ class MainActivity : ComponentActivity() {
                 Surface(
                     color = MaterialTheme.colorScheme.background
                 ) {
+                    ModalOverlay(visible = isOverlayVisible)
                     when {
                         state.isConnecting -> {
                             Column(

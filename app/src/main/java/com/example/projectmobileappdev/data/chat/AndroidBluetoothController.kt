@@ -11,10 +11,13 @@ import android.content.Context
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.util.Log
 import com.example.projectmobileappdev.domain.chat.BluetoothController
 import com.example.projectmobileappdev.domain.chat.BluetoothDeviceDomain
 import com.example.projectmobileappdev.domain.chat.BluetoothMessage
 import com.example.projectmobileappdev.domain.chat.ConnectionResult
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -31,6 +34,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.UUID
@@ -213,10 +217,25 @@ class AndroidBluetoothController(
             )
         }
 
+        val databaseReference = FirebaseDatabase.getInstance().getReference("chat_messages")
+        val messageKey = databaseReference.push().key
+        var imageToSend = imageUri?.let { readImageBytes(it) }
+        val imageUrl = imageToSend?.let { uploadImageToFirebaseStorage(it) }
+
+        messageKey?.let { key ->
+            val messageDetails = HashMap<String, Any?>()
+            messageDetails["message"] = bluetoothMessage.message
+            messageDetails["senderName"] = bluetoothMessage.senderName
+            messageDetails["imageUri"] = imageUrl
+
+            databaseReference.child(key).setValue(messageDetails)
+        }
+
         dataTransfer?.sendMessage(bluetoothMessage.toByteArray())
 
         return bluetoothMessage
     }
+
     override fun closeConnection() {
         deviceClientSocket?.close()
         deviceServerSocket?.close()
@@ -262,6 +281,23 @@ class AndroidBluetoothController(
             }
         }
     }
+
+    private suspend fun uploadImageToFirebaseStorage(imageBytes: ByteArray): String {
+        val storageReference = FirebaseStorage.getInstance().reference
+        val imagesRef = storageReference.child("images")
+        val imageFileName = "image_${System.currentTimeMillis()}.png" // Generate a unique filename
+
+        return try {
+            val imageRef = imagesRef.child(imageFileName)
+            val uploadTask = imageRef.putBytes(imageBytes).await() // Upload image bytes to Firebase Storage
+            imageRef.downloadUrl.await().toString() // Get the download URL of the uploaded image
+        } catch (e: Exception) {
+            // Handle upload failure
+            Log.e("FirebaseStorage", "Error uploading image: ${e.message}")
+            "" // Return an empty string or null to signify upload failure
+        }
+    }
+
     companion object {
         const val SERVICE_UUID = "27b7d1da-08c7-4505-a6d1-2459987e5e2d"
     }
