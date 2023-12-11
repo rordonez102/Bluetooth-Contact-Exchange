@@ -3,4 +3,4 @@ The Bluetooth Contact Exchange Application allows 2 users to communicate with ea
 
 ## Acknowledgments
 I would like to express my gratitude to:
-- [Philipp Lackner](https://www.youtube.com/watch?v=A41hkHoYu4M&t=1580s) - for helping impelement the bluetooth functionality within the application.
+- [Philipp Lackner](https://www.youtube.com/watch?v=A41hkHoYu4M&t=1580s) - for helping implement the bluetooth functionality within the application.
