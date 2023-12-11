@@ -1,4 +1,4 @@
-# finalprojtest
+# Bluetooth Contact Exchange
 The Bluetooth Contact Exchange Application allows 2 users to communicate with each other through bluetooth with the main purpose of exchanging contact information. Users can also engage in an online chat and send pictures with each other.
 
 ## Acknowledgments
