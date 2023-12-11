@@ -4,6 +4,7 @@ import android.Manifest
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothManager
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
@@ -11,21 +12,21 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.projectmobileappdev.presentation.components.ChatScreen
 import com.example.projectmobileappdev.presentation.components.DeviceScreen
 import com.example.projectmobileappdev.ui.theme.ProjectMobileappdevTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -44,13 +45,26 @@ class MainActivity : ComponentActivity() {
     private val isBluetoothEnabled: Boolean
         get() = bluetoothAdapter?.isEnabled == true
 
-    //TALK
     private fun makeDeviceDiscoverable() {
-        val requestCode = 1;
+        val requestCode = 2;
         val discoverableIntent = Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE).apply{
             putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300)
         }
         startActivityForResult(discoverableIntent, requestCode)
+    }
+    private fun accessContactNumber() {
+        val requestCode = 1;
+        val permission = ContextCompat.checkSelfPermission(this,
+            Manifest.permission.READ_PHONE_STATE)
+
+        if (permission != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                arrayOf(
+                    Manifest.permission.READ_SMS,
+                    Manifest.permission.READ_PHONE_NUMBERS,
+                    Manifest.permission.READ_PHONE_STATE
+                ), requestCode)
+        }
     }
 
     //requests permission for bluetooth and if permission is granted, loads the app.
@@ -82,7 +96,9 @@ class MainActivity : ComponentActivity() {
                 )
             )
         }
-        //TALK
+        accessContactNumber()
+
+        enableBluetoothLauncher.launch(Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE))
         makeDeviceDiscoverable()
 
         setContent {
@@ -123,7 +139,14 @@ class MainActivity : ComponentActivity() {
                                 Text(text = "Connecting...")
                             }
                         }
-
+                        state.isConnected -> {
+                            ChatScreen(
+                                state = state,
+                                onDisconnect = viewModel::disconnectFromDevice,
+                                onSendMessage = viewModel::sendMessage,
+                                onGetPhoneNumber = viewModel::getPhoneNumber
+                            )
+                        }
                         else -> {
                             DeviceScreen(
                                 state = state,
