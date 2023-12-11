@@ -23,5 +23,4 @@ interface BluetoothController {
     fun closeConnection()
     //function that releases any resources being used by the controller
     fun release()
-    fun getDeviceServerSocket(): BluetoothServerSocket?
 }
