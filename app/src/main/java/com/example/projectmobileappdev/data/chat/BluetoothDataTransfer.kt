@@ -14,7 +14,7 @@ import java.io.IOException
 class BluetoothDataTransfer(
     private val socket: BluetoothSocket
 ) {
-    fun listenForIncomingMessages(): Flow<BluetoothMessage> {
+    suspend fun listenForIncomingMessages(): Flow<BluetoothMessage> {
         return flow {
             if (!socket.isConnected) {
                 return@flow
@@ -26,7 +26,6 @@ class BluetoothDataTransfer(
                 } catch (e: IOException) {
                     throw TransferFailedException()
                 }
-
                 emit(
                     buffer.decodeToString(
                         endIndex = byteCount

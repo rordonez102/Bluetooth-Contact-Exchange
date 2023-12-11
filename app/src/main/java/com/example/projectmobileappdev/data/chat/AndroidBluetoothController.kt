@@ -48,8 +48,6 @@ class AndroidBluetoothController(
     }
     private var dataTransfer: BluetoothDataTransfer? = null
 
-    private val phoneNumberHelper = PhoneNumberHelper(context)
-
     private val _isConnected = MutableStateFlow<Boolean>(false)
     override val isConnected: StateFlow<Boolean>
         get() = _isConnected.asStateFlow()
@@ -245,9 +243,6 @@ class AndroidBluetoothController(
     private fun hasPermission(permission: String): Boolean {
         return context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED
     }
-    private fun getPhoneNumberFlow(): String {
-        return phoneNumberHelper.getPhoneNumber()
-    }
 
     private suspend fun readImageBytes(uri: Uri): ByteArray {
         return withContext(Dispatchers.IO) {
@@ -262,6 +257,10 @@ class AndroidBluetoothController(
             }
         }
     }
+    override fun getDeviceServerSocket(): BluetoothServerSocket? {
+        return deviceServerSocket
+    }
+
     companion object {
         const val SERVICE_UUID = "27b7d1da-08c7-4505-a6d1-2459987e5e2d"
     }

@@ -1,5 +1,6 @@
 package com.example.projectmobileappdev.domain.chat
 
+import android.bluetooth.BluetoothServerSocket
 import android.net.Uri
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharedFlow
@@ -22,4 +23,5 @@ interface BluetoothController {
     fun closeConnection()
     //function that releases any resources being used by the controller
     fun release()
+    fun getDeviceServerSocket(): BluetoothServerSocket?
 }
